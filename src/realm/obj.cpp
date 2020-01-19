@@ -23,6 +23,7 @@
 #include "realm/array_bool.hpp"
 #include "realm/array_string.hpp"
 #include "realm/array_binary.hpp"
+#include "realm/array_mixed.hpp"
 #include "realm/array_timestamp.hpp"
 #include "realm/array_decimal128.hpp"
 #include "realm/array_key.hpp"
@@ -194,6 +195,8 @@ Mixed ConstObj::get_any(ColKey col_key) const
             return Mixed{get<String>(col_key)};
         case col_type_Binary:
             return Mixed{get<Binary>(col_key)};
+        case col_type_OldMixed:
+            return get<Mixed>(col_key);
         case col_type_Timestamp:
             return Mixed{get<Timestamp>(col_key)};
         case col_type_Decimal:
@@ -735,7 +738,8 @@ Obj& Obj::set(ColKey col_key, Mixed value)
         set_null(col_key);
     }
     else {
-        REALM_ASSERT(value.get_type() == DataType(col_key.get_type()));
+        auto col_type = col_key.get_type();
+        REALM_ASSERT(value.get_type() == DataType(col_type) || col_type == col_type_OldMixed);
         switch (col_key.get_type()) {
             case col_type_Int:
                 if (col_key.get_attrs().test(col_attr_Nullable)) {
@@ -759,6 +763,9 @@ Obj& Obj::set(ColKey col_key, Mixed value)
                 break;
             case col_type_Binary:
                 set(col_key, value.get<Binary>());
+                break;
+            case col_type_OldMixed:
+                set(col_key, value, false);
                 break;
             case col_type_Timestamp:
                 set(col_key, value.get<Timestamp>());

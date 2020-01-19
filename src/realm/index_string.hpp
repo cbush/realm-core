@@ -391,6 +391,15 @@ struct GetIndexData<util::Optional<T>> {
 };
 
 template <>
+struct GetIndexData<Mixed> {
+    static StringData get_index_data(Mixed, StringConversionBuffer&)
+    {
+        REALM_ASSERT_RELEASE(false); // LCOV_EXCL_LINE; Index on float not supported
+        return {};
+    }
+};
+
+template <>
 struct GetIndexData<float> {
     static StringData get_index_data(float, StringConversionBuffer&)
     {
